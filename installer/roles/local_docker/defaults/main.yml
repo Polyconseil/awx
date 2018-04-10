@@ -8,3 +8,10 @@ awx_volumes: >
     + [ca_trust_dir + ':/etc/pki/ca-trust:ro'] if ca_trust_dir is defined else []
     + custom_volumes if custom_volumes is defined else []
   }}
+
+awx_web_post_actions:
+  - /bin/bash -c "/bin/sleep 5 && /usr/bin/docker exec awx_web cp -a /etc/tower/logo-header.svg /var/lib/awx/public/static/assets/logo-header.svg"
+
+awx_task_post_actions:
+  - /bin/bash -c "/bin/sleep 5 && /usr/bin/docker exec awx_task bash -c 'source venv/ansible/bin/activate && pip install dnspython configparser pyfg netaddr'"
+  - /bin/bash -c "/usr/bin/docker exec awx_task pip install junos-eznc junos-netconify"
