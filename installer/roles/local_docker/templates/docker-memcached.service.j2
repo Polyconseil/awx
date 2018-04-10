@@ -1,0 +1,19 @@
+[Unit]
+Description=AWX Memcached Container
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker kill memcached
+ExecStartPre=-/usr/bin/docker rm memcached
+ExecStart=/usr/bin/docker run \
+    --name=memcached \
+    --network=awx_network \
+    memcached:alpine
+
+ExecStop=/usr/bin/docker stop -t 3 memcached
+TimeoutStopSec=1
+Restart=always
+RestartSec=4
+
+[Install]
+WantedBy=multi-user.target

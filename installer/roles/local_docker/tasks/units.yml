@@ -1,0 +1,79 @@
+---
+- name: Create AWX docker network
+  docker_network:
+    name: awx_network
+    ipam_options:
+      subnet: "{{ docker_network_subnet }}"
+      gateway: "{{ docker_network_gateway }}"
+  notify: Restart docker service
+
+- name: Create postgres container unit file
+  template:
+    src: docker-postgres.service.j2
+    dest: /etc/systemd/system/docker-postgres.service
+  register: postgres_container_unit
+  notify:
+    - Reload systemd
+    - Restart postgres docker
+  when: pg_hostname is not defined or pg_hostname == ''
+
+- name: Create rabbitmq and memcached container unit files
+  template:
+    src: docker-{{ item }}.service.j2
+    dest: /etc/systemd/system/docker-{{ item }}.service
+  register: rab_mem_container_unit
+  notify:
+    - Reload systemd
+    - Restart {{ item }} docker
+  with_items:
+    - rabbitmq
+    - memcached
+
+- name: Force handlers
+  meta: flush_handlers
+
+- name: Ensure postgres container is enabled and started
+  service:
+    name: docker-postgres.service
+    enabled: yes
+    state: started
+  register: postgres_container_started
+  when: pg_hostname is not defined or pg_hostname == ''
+
+- name: Ensure rabbitmq and memcached containers are enabled and started
+  service:
+    name: docker-{{ item }}.service
+    enabled: yes
+    state: started
+  register: rab_mem_container_started
+  with_items:
+    - rabbitmq
+    - memcached
+
+- name: Wait for postgres or rabbitmq to activate
+  pause:
+    seconds: 15
+  when: postgres_container_unit.changed or rab_mem_container_unit.changed or postgres_container_started.changed or rab_mem_container_started.changed
+
+- name: Create AWX containers unit files
+  template:
+    src: awx-{{ item }}.service.j2
+    dest: /etc/systemd/system/awx-{{ item }}.service
+  notify:
+    - Reload systemd
+    - Restart awx-{{ item }} docker
+  with_items:
+    - web
+    - task
+
+- name: Force handlers
+  meta: flush_handlers
+
+- name: Ensure AWX containers are enabled and started
+  service:
+    name: awx-{{ item }}.service
+    enabled: yes
+    state: started
+  with_items:
+    - web
+    - task
