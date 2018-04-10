@@ -130,6 +130,8 @@ secret_key=awxsecret
 #awx_container_search_domains=example.com,ansible.com
 # Alternate DNS servers
 #awx_alternate_dns_servers="10.1.2.3,10.2.3.4"
+docker_network_subnet=172.17.0.0/16
+docker_network_gateway=172.17.0.1
 
 # AWX project data folder. If you need access to the location where AWX stores the projects
 # it manages from the docker host, you can set this to turn it into a volume for the container.

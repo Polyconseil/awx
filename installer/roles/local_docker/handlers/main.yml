@@ -1,0 +1,34 @@
+---
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: yes
+
+- name: Restart docker service
+  service:
+    name: docker
+    state: restarted
+
+- name: Restart postgres docker
+  service:
+    name: docker-postgres
+    state: restarted
+
+- name: Restart rabbitmq docker
+  service:
+    name: docker-rabbitmq
+    state: restarted
+
+- name: Restart memcached docker
+  service:
+    name: docker-memcached
+    state: restarted
+
+- name: Restart awx-web docker
+  service:
+    name: awx-web
+    state: restarted
+
+- name: Restart awx-task docker
+  service:
+    name: awx-task
+    state: restarted
