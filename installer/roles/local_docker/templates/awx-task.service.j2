@@ -1,0 +1,53 @@
+[Unit]
+Description=AWX Task Container
+After=docker.service docker-postgres.service docker-rabbitmq.service docker-memcached.service awx-web.service
+
+[Service]
+ExecStartPre=/usr/bin/docker pull {{ awx_task_docker_actual_image }}
+ExecStartPre=-/usr/bin/docker kill awx_{{ item }}
+ExecStartPre=-/usr/bin/docker rm awx_{{ item }}
+ExecStart=/usr/bin/docker run \
+    --name=awx_{{ item }} \
+    --hostname=awx \
+    --network=awx_network \
+{% for domain in awx_container_search_domains | default([]) %}
+    --dns-search={{ server }} \
+{% endfor %}
+{% for server in awx_alternate_dns_servers | default([]) %}
+    --dns={{ server }} \
+{% endfor %}
+    -e http_proxy={{ http_proxy | default('') }} \
+    -e https_proxy={{ https_proxy | default('') }} \
+    -e no_proxy={{ no_proxy | default('') }} \
+    -e SECRET_KEY={{ awx_secret_key }} \
+    -e DATABASE_NAME={{ pg_database }} \
+    -e DATABASE_USER={{ pg_username }} \
+    -e DATABASE_PASSWORD={{ pg_password }} \
+    -e DATABASE_PORT={{ pg_port }} \
+    -e DATABASE_HOST={{ pg_hostname | default('postgres') }} \
+    -e RABBITMQ_USER=guest \
+    -e RABBITMQ_PASSWORD=guest \
+    -e RABBITMQ_HOST=rabbitmq \
+    -e RABBITMQ_PORT=5672 \
+    -e RABBITMQ_VHOST=awx \
+    -e MEMCACHED_HOST=memcached \
+    -e MEMCACHED_PORT=11211 \
+    -e AWX_ADMIN_USER={{ default_admin_user|default('admin') }} \
+    -e AWX_ADMIN_PASSWORD={{ default_admin_password|default('password') }}  \
+    -u root \
+{% for volume in awx_volumes | default([]) %}
+    -v {{ volume }} \
+{% endfor %}
+    {{ awx_task_docker_actual_image }}
+
+{% for action in awx_task_post_actions | default([]) %}
+ExecStartPost={{ action }}
+{% endfor %}
+ExecStop=/usr/bin/docker stop -t 3 awx_{{ item }}
+TimeoutStopSec=15
+TimeoutStartSec=180
+Restart=always
+RestartSec=4
+
+[Install]
+WantedBy=multi-user.target

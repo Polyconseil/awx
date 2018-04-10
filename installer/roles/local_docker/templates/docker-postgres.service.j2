@@ -1,0 +1,24 @@
+[Unit]
+Description=AWX Postgres Container
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker kill postgres
+ExecStartPre=-/usr/bin/docker rm postgres
+ExecStart=/usr/bin/docker run \
+    --name=postgres \
+    --network=awx_network \
+    -e POSTGRES_USER={{ pg_username }} \
+    -e POSTGRES_PASSWORD={{ pg_password }} \
+    -e POSTGRES_DB={{ pg_database }} \
+    -e PGDATA=/var/lib/postgresql/data/pgdata \
+    -v {{ postgres_data_dir }}:/var/lib/postgresql/data:Z \
+    postgres:9.6
+
+ExecStop=/usr/bin/docker stop -t 3 postgres
+TimeoutStopSec=1
+Restart=always
+RestartSec=4
+
+[Install]
+WantedBy=multi-user.target

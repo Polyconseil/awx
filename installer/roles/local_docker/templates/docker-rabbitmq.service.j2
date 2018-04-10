@@ -1,0 +1,21 @@
+[Unit]
+Description=AWX RabbitMQ Container
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker kill rabbitmq
+ExecStartPre=-/usr/bin/docker rm rabbitmq
+ExecStart=/usr/bin/docker run \
+    --name=rabbitmq \
+    --network=awx_network \
+    -e RABBITMQ_DEFAULT_VHOST=awx \
+    -e RABBITMQ_ERLANG_COOKIE=cookiemonster \
+    {{ rabbitmq_image }}
+
+ExecStop=/usr/bin/docker stop -t 3 rabbitmq
+TimeoutStopSec=1
+Restart=always
+RestartSec=4
+
+[Install]
+WantedBy=multi-user.target
