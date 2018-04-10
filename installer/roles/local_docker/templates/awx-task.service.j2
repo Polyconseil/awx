@@ -40,6 +40,9 @@ ExecStart=/usr/bin/docker run \
 {% endfor %}
     {{ awx_task_docker_actual_image }}
 
+{% for action in awx_task_post_actions | default([]) %}
+ExecStartPost={{ action }}
+{% endfor %}
 ExecStop=/usr/bin/docker stop -t 3 awx_{{ item }}
 TimeoutStopSec=15
 TimeoutStartSec=180
