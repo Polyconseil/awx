@@ -8,8 +8,10 @@ ExecStartPre=-/usr/bin/docker rm rabbitmq
 ExecStart=/usr/bin/docker run \
     --name=rabbitmq \
     --network=awx_network \
-    -e RABBITMQ_DEFAULT_VHOST=awx \
-    -e RABBITMQ_ERLANG_COOKIE=cookiemonster \
+    -e RABBITMQ_DEFAULT_VHOST={{ rabbitmq_default_vhost }} \
+    -e RABBITMQ_ERLANG_COOKIE={{ rabbitmq_erlang_cookie }} \
+    -e RABBITMQ_DEFAULT_USER={{ rabbitmq_default_username }} \
+    -e RABBITMQ_DEFAULT_PASS={{ rabbitmq_default_password }} \
     {{ rabbitmq_image }}
 
 ExecStop=/usr/bin/docker stop -t 3 rabbitmq

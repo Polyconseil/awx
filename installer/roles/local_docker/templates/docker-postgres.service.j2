@@ -13,7 +13,7 @@ ExecStart=/usr/bin/docker run \
     -e POSTGRES_DB={{ pg_database }} \
     -e PGDATA=/var/lib/postgresql/data/pgdata \
     -v {{ postgres_data_dir }}:/var/lib/postgresql/data:Z \
-    postgres:9.6
+    postgres:{{ postgresql_image }}
 
 ExecStop=/usr/bin/docker stop -t 3 postgres
 TimeoutStopSec=1

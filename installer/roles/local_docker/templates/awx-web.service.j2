@@ -8,7 +8,7 @@ ExecStartPre=-/usr/bin/docker kill awx_{{ item }}
 ExecStartPre=-/usr/bin/docker rm awx_{{ item }}
 ExecStart=/usr/bin/docker run \
     --name=awx_{{ item }} \
-    --hostname=awx{{ item }} \
+    --hostname={{ awx_web_hostname }} \
     --network=awx_network \
 {% for domain in awx_container_search_domains | default([]) %}
     --dns-search={{ server }} \
@@ -19,21 +19,22 @@ ExecStart=/usr/bin/docker run \
     -e http_proxy={{ http_proxy | default('') }} \
     -e https_proxy={{ https_proxy | default('') }} \
     -e no_proxy={{ no_proxy | default('') }} \
-    -e SECRET_KEY={{ awx_secret_key }} \
+    -e SECRET_KEY={{ secret_key }} \
     -e DATABASE_NAME={{ pg_database }} \
     -e DATABASE_USER={{ pg_username }} \
     -e DATABASE_PASSWORD={{ pg_password }} \
     -e DATABASE_PORT={{ pg_port }} \
     -e DATABASE_HOST={{ pg_hostname | default('postgres') }} \
-    -e RABBITMQ_USER=guest \
-    -e RABBITMQ_PASSWORD=guest \
+    -e DATABASE_SSLMODE={{ pg_sslmode | default('require') }} \
+    -e RABBITMQ_USER={{ rabbitmq_default_username }} \
+    -e RABBITMQ_PASSWORD={{ rabbitmq_default_password }} \
     -e RABBITMQ_HOST=rabbitmq \
-    -e RABBITMQ_PORT=5672 \
-    -e RABBITMQ_VHOST=awx \
+    -e RABBITMQ_PORT={{ rabbitmq_port }} \
+    -e RABBITMQ_VHOST={{ rabbitmq_default_vhost }} \
     -e MEMCACHED_HOST=memcached \
     -e MEMCACHED_PORT=11211 \
-    -e AWX_ADMIN_USER={{ default_admin_user|default('admin') }} \
-    -e AWX_ADMIN_PASSWORD={{ default_admin_password|default('password') }}  \
+    -e AWX_ADMIN_USER={{ admin_user|default('admin') }} \
+    -e AWX_ADMIN_PASSWORD={{ admin_password|default('password') }}  \
     -u root \
     -p {{ host_port }}:8052 \
 {% for volume in awx_volumes | default([]) %}
